@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, FormEvent } from 'react'
 import ChatWindow from '@/components/ChatWindow'
 import InputBar from '@/components/InputBar'
 import StillSpace from '@/components/StillSpace'
-import { ensureUser, createConversation, persistTurn, logEvent } from '@/lib/persist'
+import { ensureUser, createConversation, persistTurn, logEvent, getPresenceContext } from '@/lib/persist'
 
 export default function Home() {
   // 持久化用到的引用（best-effort，全程不阻塞对话）
@@ -67,12 +67,14 @@ export default function Home() {
     if (last.content.includes('[SESSION_END]')) setSessionEnded(true)
   }, [messages, isLoading])
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
-    if (input.trim()) {
-      pendingUserText.current = input
-      sentAtRef.current = new Date().toISOString()
-    }
-    handleSubmit(e)
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!input.trim()) return
+    pendingUserText.current = input
+    sentAtRef.current = new Date().toISOString()
+    // 读取在场质地（静默分析层反哺），随请求传给路由注入提示词
+    const presence = userIdRef.current ? await getPresenceContext(userIdRef.current) : null
+    handleSubmit(e, { body: { presence } })
   }
 
   function enterStill() {

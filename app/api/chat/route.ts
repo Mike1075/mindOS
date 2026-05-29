@@ -26,8 +26,32 @@ function staticStream(text: string): Response {
   })
 }
 
+interface Presence {
+  cooldown?: boolean
+  highIntensity?: boolean
+  repeatedVoices?: string[]
+}
+
+// 静默分析层 → 实时在场质地调节（V2 §3 VAILs 防护的实时反哺）
+function presenceDirective(p?: Presence): string {
+  if (!p) return ''
+  const parts: string[] = []
+  if (p.cooldown || p.highIntensity) {
+    parts.push(
+      '对方近期情绪强度偏高。此刻更安静、更简短、多留白，不深入挖掘任何议题，并自然留一个开放的出口。'
+    )
+  }
+  if (p.repeatedVoices && p.repeatedVoices.length > 0) {
+    parts.push(
+      `这些自我贬低的声音已在过往反复出现：${p.repeatedVoices.join('、')}。减少而非增加对它们的聚焦——不要确认、不要深挖，更多停留在当下或身体感受里。`
+    )
+  }
+  if (parts.length === 0) return ''
+  return `\n\n【此刻的在场质地（后台静默分析，不要向对方提及）】\n${parts.join('\n')}`
+}
+
 export async function POST(req: NextRequest) {
-  const { messages } = await req.json()
+  const { messages, presence } = await req.json()
 
   // 急性危机熔断：前置规则扫描最近一条用户消息
   const lastUser = [...messages].reverse().find((m: { role: string; content: string }) => m.role === 'user')
@@ -54,7 +78,7 @@ export async function POST(req: NextRequest) {
 
   const result = streamText({
     model: gateway(MODEL_ID),
-    system: getSystemPrompt(),
+    system: getSystemPrompt() + presenceDirective(presence as Presence | undefined),
     messages,
   })
 

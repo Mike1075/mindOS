@@ -92,6 +92,54 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['messages']['Insert']>
         Relationships: []
       }
+      user_state: {
+        Row: {
+          consecutive_high_intensity_turns: number
+          cooldown_until: string | null
+          last_active_at: string | null
+          presence_density: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consecutive_high_intensity_turns?: number
+          cooldown_until?: string | null
+          last_active_at?: string | null
+          presence_density?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: Partial<Database['public']['Tables']['user_state']['Insert']>
+        Relationships: []
+      }
+      belief_voices: {
+        Row: {
+          created_at: string
+          first_seen_at: string
+          formula_text: string | null
+          id: string
+          last_intensity: number | null
+          last_seen_at: string
+          normalized_key: string
+          occurrence_count: number
+          user_id: string
+          voice_label: string
+        }
+        Insert: {
+          created_at?: string
+          first_seen_at?: string
+          formula_text?: string | null
+          id?: string
+          last_intensity?: number | null
+          last_seen_at?: string
+          normalized_key: string
+          occurrence_count?: number
+          user_id: string
+          voice_label: string
+        }
+        Update: Partial<Database['public']['Tables']['belief_voices']['Insert']>
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }
