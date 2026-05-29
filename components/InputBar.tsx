@@ -1,12 +1,12 @@
 'use client'
 
-import { FormEvent, KeyboardEvent, useRef, useEffect } from 'react'
+import { ChangeEvent, FormEvent, KeyboardEvent, useRef, useEffect } from 'react'
 
 interface InputBarProps {
   input: string
   isLoading: boolean
   disabled: boolean
-  onInputChange: (value: string) => void
+  onInputChange: (e: ChangeEvent<HTMLTextAreaElement>) => void
   onSubmit: (e: FormEvent<HTMLFormElement>) => void
 }
 
@@ -36,7 +36,7 @@ export default function InputBar({ input, isLoading, disabled, onInputChange, on
         <textarea
           ref={textareaRef}
           value={input}
-          onChange={(e) => onInputChange(e.target.value)}
+          onChange={onInputChange}
           onKeyDown={handleKeyDown}
           disabled={disabled || isLoading}
           placeholder={disabled ? '此刻已足够。请离开，去觉察。' : '带着你真实的状态，说话……'}

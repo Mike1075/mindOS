@@ -5,7 +5,7 @@ import MessageBubble from './MessageBubble'
 
 interface Message {
   id: string
-  role: 'user' | 'assistant'
+  role: string
   content: string
 }
 
@@ -36,9 +36,15 @@ export default function ChatWindow({ messages, isLoading, fading }: ChatWindowPr
         </div>
       )}
 
-      {messages.map((msg) => (
-        <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
-      ))}
+      {messages
+        .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
+        .map((msg) => (
+          <MessageBubble
+            key={msg.id}
+            role={msg.role as 'user' | 'assistant'}
+            content={msg.content}
+          />
+        ))}
 
       {isLoading && (
         <div className="flex justify-start mb-6">

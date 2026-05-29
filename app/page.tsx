@@ -81,7 +81,7 @@ export default function Home() {
         input={input}
         isLoading={isLoading}
         disabled={sessionEnded || !!voidData}
-        onInputChange={(v) => handleInputChange({ target: { value: v } } as React.ChangeEvent<HTMLInputElement>)}
+        onInputChange={handleInputChange}
         onSubmit={onSubmit}
       />
 
