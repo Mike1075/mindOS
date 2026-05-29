@@ -3,10 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0a0a0a;
-  --text: #e8e8e0;
-  --text-dim: #888880;
-  --border: #2a2a2a;
+  --base: #17150f;
+  --surface: #1f1c14;
+  --raised: #27231a;
+  --line: #2e2a20;
+  --ink: #ece7da;
+  --ink-soft: #b7b1a2;
+  --ink-dim: #6e695c;
+  --ink-faint: #46423a;
+  --celadon: #8fb0a2;
+  --celadon-dim: #5e7167;
 }
 
 * {
@@ -15,52 +21,100 @@
 
 html,
 body {
-  background-color: var(--bg);
-  color: var(--text);
+  margin: 0;
+  padding: 0;
+  background: var(--base);
+  color: var(--ink);
   font-family: 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
   font-size: 15px;
-  line-height: 1.75;
+  line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar */
+body {
+  min-height: 100dvh;
+  /* 暮色微光：顶部一抹暖光，向下沉入暖炭黑 */
+  background: radial-gradient(125% 80% at 50% -8%, #221e14 0%, #17150f 52%);
+  background-attachment: fixed;
+}
+
+.font-song {
+  font-family: 'Songti SC', 'STSong', 'Noto Serif SC', 'Source Han Serif SC', serif;
+}
+
+/* 滚动条 */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 2px;
+  background: #2a261d;
+  border-radius: 3px;
 }
 
-/* Void fade animation */
-@keyframes voidFadeIn {
+::selection {
+  background: rgba(143, 176, 162, 0.18);
+  color: var(--ink);
+}
+
+/* 动效 */
+@keyframes riseIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
-@keyframes voidFadeOut {
+@keyframes softIn {
   from {
-    opacity: 1;
-  }
-  to {
     opacity: 0;
   }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.16);
+    opacity: 0.85;
+  }
+}
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.75;
+  }
 }
 
-.void-enter {
-  animation: voidFadeIn 2s ease-out forwards;
+.rise-in {
+  animation: riseIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.soft-in {
+  animation: softIn 1.2s ease-out forwards;
+}
+.breathe {
+  animation: breathe 8s ease-in-out infinite;
 }
 
-.chat-fade-out {
-  animation: voidFadeOut 1.5s ease-in forwards;
+.fade-leave {
+  transition: opacity 1.4s ease;
+  opacity: 0;
+}
+.fade-stay {
+  transition: opacity 1.4s ease;
+  opacity: 1;
 }

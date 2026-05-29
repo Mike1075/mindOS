@@ -29,7 +29,7 @@ function staticStream(text: string): Response {
 export async function POST(req: NextRequest) {
   const { messages } = await req.json()
 
-  // Safety check on latest user message
+  // 急性危机熔断：前置规则扫描最近一条用户消息
   const lastUser = [...messages].reverse().find((m: { role: string; content: string }) => m.role === 'user')
   if (lastUser) {
     const { isCrisis, response } = checkSafety(lastUser.content)
@@ -38,11 +38,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Session limit check
+  // 会话软上限：开放性收束，绝不在情绪峰值硬切（对齐 V2 — 永远留一个开放出口）
   const userTurns = messages.filter((m: { role: string }) => m.role === 'user').length
   if (userTurns > MAX_TURNS) {
     return staticStream(
-      '今天的映照已经足够清晰了。威力之点在当下，在屏幕之外的真实生活中。请离开这里，去觉察你今天所看见的。[SESSION_END]'
+      '今天，我们先在这里停一停。\n\n你带走的不是我说过的话，是你自己看见的东西。它会在你离开屏幕之后，继续慢慢清晰起来。[SESSION_END]'
     )
   }
 

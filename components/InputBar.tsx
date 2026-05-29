@@ -11,53 +11,63 @@ interface InputBarProps {
 }
 
 export default function InputBar({ input, isLoading, disabled, onInputChange, onSubmit }: InputBarProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const ref = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    const ta = textareaRef.current
+    const ta = ref.current
     if (!ta) return
     ta.style.height = 'auto'
     ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`
   }, [input])
 
-  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+  function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       if (!disabled && !isLoading && input.trim()) {
-        const form = e.currentTarget.closest('form')
-        form?.requestSubmit()
+        e.currentTarget.closest('form')?.requestSubmit()
       }
     }
   }
 
   return (
-    <div className="border-t border-[#1e1e1e] px-4 py-4">
-      <form onSubmit={onSubmit} className="flex items-end gap-3 max-w-2xl mx-auto">
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={onInputChange}
-          onKeyDown={handleKeyDown}
-          disabled={disabled || isLoading}
-          placeholder={disabled ? '此刻已足够。请离开，去觉察。' : '带着你真实的状态，说话……'}
-          rows={1}
-          className="flex-1 resize-none bg-[#111] border border-[#2a2a2a] rounded-xl px-4 py-3 text-[14px] text-mirror placeholder-[#444] focus:outline-none focus:border-[#444] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        />
-        <button
-          type="submit"
-          disabled={disabled || isLoading || !input.trim()}
-          className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-[#1e1e1e] text-[#666] hover:text-[#aaa] hover:bg-[#252525] disabled:opacity-20 disabled:cursor-not-allowed transition-all"
-          aria-label="发送"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="19" x2="12" y2="5" />
-            <polyline points="5 12 12 5 19 12" />
-          </svg>
-        </button>
+    <div className="px-5 pb-6 pt-2">
+      <form onSubmit={onSubmit} className="max-w-2xl mx-auto">
+        <div className="flex items-end gap-2.5 rounded-2xl bg-surface border border-line focus-within:border-celadon-dim transition-colors px-3.5 py-2.5">
+          <textarea
+            ref={ref}
+            value={input}
+            onChange={onInputChange}
+            onKeyDown={onKeyDown}
+            disabled={disabled || isLoading}
+            placeholder={disabled ? '此刻已经足够。' : '说点此刻真实的……'}
+            rows={1}
+            className="flex-1 resize-none bg-transparent text-[14.5px] leading-relaxed text-ink focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          />
+          <button
+            type="submit"
+            disabled={disabled || isLoading || !input.trim()}
+            aria-label="送出"
+            className="shrink-0 w-8 h-8 mb-0.5 flex items-center justify-center rounded-full text-ink-dim hover:text-celadon disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="19" x2="12" y2="6" />
+              <polyline points="6 12 12 6 18 12" />
+            </svg>
+          </button>
+        </div>
+        <p className="text-center text-[11px] text-ink-faint mt-3 tracking-wide">
+          这是一面镜子，不是顾问。· 危机请拨 400-161-9995
+        </p>
       </form>
-      <p className="text-center text-[11px] text-[#333] mt-3">
-        这是一面镜子，不是顾问。· 如有危机请拨打 400-161-9995
-      </p>
     </div>
   )
 }

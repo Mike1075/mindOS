@@ -20,43 +20,45 @@ export default function ChatWindow({ messages, isLoading, fading }: ChatWindowPr
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, isLoading])
 
   return (
-    <div
-      className={`flex-1 overflow-y-auto px-6 py-8 transition-opacity duration-1500 ${
-        fading ? 'opacity-0' : 'opacity-100'
-      }`}
-    >
-      {messages.length === 0 && (
-        <div className="flex items-center justify-center h-full">
-          <p className="text-[#444] text-sm tracking-widest text-center">
-            带着你此刻真实的状态，开口说话。
-          </p>
-        </div>
-      )}
-
-      {messages
-        .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
-        .map((msg) => (
-          <MessageBubble
-            key={msg.id}
-            role={msg.role as 'user' | 'assistant'}
-            content={msg.content}
-          />
-        ))}
-
-      {isLoading && (
-        <div className="flex justify-start mb-6">
-          <div className="flex gap-1 pt-2">
-            <span className="w-1 h-1 rounded-full bg-[#444] animate-pulse" style={{ animationDelay: '0ms' }} />
-            <span className="w-1 h-1 rounded-full bg-[#444] animate-pulse" style={{ animationDelay: '200ms' }} />
-            <span className="w-1 h-1 rounded-full bg-[#444] animate-pulse" style={{ animationDelay: '400ms' }} />
+    <div className={`flex-1 overflow-y-auto px-6 py-10 ${fading ? 'fade-leave' : 'fade-stay'}`}>
+      <div className="max-w-2xl mx-auto">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-[58vh] text-center soft-in">
+            <div className="w-14 h-14 rounded-full border border-line mb-9 breathe" />
+            <p className="font-song text-ink-soft text-[17px] leading-loose">
+              带着你此刻真实的状态，
+              <br />
+              开口说话。
+            </p>
+            <p className="mt-5 text-ink-faint text-[12px] tracking-[0.2em]">这里没有要去的地方。</p>
           </div>
-        </div>
-      )}
+        )}
 
-      <div ref={bottomRef} />
+        {messages
+          .filter((m) => m.role === 'user' || m.role === 'assistant')
+          .map((m) => (
+            <MessageBubble key={m.id} role={m.role as 'user' | 'assistant'} content={m.content} />
+          ))}
+
+        {isLoading && (
+          <div className="flex justify-start mb-9">
+            <div className="flex gap-1.5 pt-1">
+              {[0, 200, 400].map((d) => (
+                <span
+                  key={d}
+                  className="w-1.5 h-1.5 rounded-full bg-celadon-dim"
+                  style={{ animation: 'dotPulse 1.4s ease-in-out infinite', animationDelay: `${d}ms` }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
     </div>
   )
 }

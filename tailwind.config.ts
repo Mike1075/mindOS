@@ -9,35 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        mirror: '#e8e8e0',
-        void: '#0a0a0a',
-        dim: '#1a1a1a',
-        subtle: '#444444',
-        faint: '#2c2c2c',
+        base: '#17150f',
+        surface: '#1f1c14',
+        raised: '#27231a',
+        line: '#2e2a20',
+        ink: '#ece7da',
+        'ink-soft': '#b7b1a2',
+        'ink-dim': '#6e695c',
+        'ink-faint': '#46423a',
+        celadon: '#8fb0a2',
+        'celadon-dim': '#5e7167',
       },
       fontFamily: {
-        sans: [
-          '"PingFang SC"',
-          '"Noto Sans SC"',
-          '"Microsoft YaHei"',
-          'system-ui',
-          'sans-serif',
-        ],
-      },
-      animation: {
-        'fade-in': 'fadeIn 1.5s ease-in-out forwards',
-        'fade-out': 'fadeOut 1.5s ease-in-out forwards',
-        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        fadeOut: {
-          '0%': { opacity: '1' },
-          '100%': { opacity: '0' },
-        },
+        sans: ['"PingFang SC"', '"Noto Sans SC"', '"Microsoft YaHei"', 'system-ui', 'sans-serif'],
+        song: ['"Songti SC"', '"STSong"', '"Noto Serif SC"', '"Source Han Serif SC"', 'serif'],
       },
     },
   },
