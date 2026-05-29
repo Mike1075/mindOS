@@ -5,7 +5,16 @@ import { useEffect, useRef, useState, FormEvent } from 'react'
 import ChatWindow from '@/components/ChatWindow'
 import InputBar from '@/components/InputBar'
 import StillSpace from '@/components/StillSpace'
-import { ensureUser, createConversation, persistTurn, logEvent, getPresenceContext } from '@/lib/persist'
+import MirrorReport from '@/components/MirrorReport'
+import {
+  ensureUser,
+  createConversation,
+  persistTurn,
+  logEvent,
+  getPresenceContext,
+  getMirrorData,
+  type MirrorData,
+} from '@/lib/persist'
 
 export default function Home() {
   // 持久化用到的引用（best-effort，全程不阻塞对话）
@@ -42,6 +51,9 @@ export default function Home() {
 
   const [sessionEnded, setSessionEnded] = useState(false)
   const [still, setStill] = useState(false)
+  const [mirrorOpen, setMirrorOpen] = useState(false)
+  const [mirrorData, setMirrorData] = useState<MirrorData | null>(null)
+  const [mirrorLoading, setMirrorLoading] = useState(false)
   const processed = useRef<Set<string>>(new Set())
 
   // 会话启动：匿名登录 + 记录 session_start
@@ -82,18 +94,35 @@ export default function Home() {
     if (userIdRef.current) void logEvent(userIdRef.current, 'void_entered', convIdRef.current)
   }
 
+  async function openMirror() {
+    setMirrorOpen(true)
+    setMirrorLoading(true)
+    const uid = userIdRef.current
+    setMirrorData(uid ? await getMirrorData(uid) : null)
+    setMirrorLoading(false)
+  }
+
   return (
     <main className="flex flex-col h-[100dvh]">
       <header className="flex items-center justify-between px-6 py-4">
         <h1 className="text-[13px] tracking-[0.45em] text-ink-soft">心 镜</h1>
-        <button
-          onClick={enterStill}
-          aria-label="进入停留"
-          className="group flex items-center gap-2 text-ink-faint hover:text-celadon-dim transition-colors"
-        >
-          <span className="text-[10px] tracking-[0.3em]">停留</span>
-          <span className="w-2.5 h-2.5 rounded-full border border-current transition-colors" />
-        </button>
+        <div className="flex items-center gap-5">
+          <button
+            onClick={openMirror}
+            aria-label="镜中回望"
+            className="text-[10px] tracking-[0.3em] text-ink-faint hover:text-celadon-dim transition-colors"
+          >
+            回望
+          </button>
+          <button
+            onClick={enterStill}
+            aria-label="进入停留"
+            className="group flex items-center gap-2 text-ink-faint hover:text-celadon-dim transition-colors"
+          >
+            <span className="text-[10px] tracking-[0.3em]">停留</span>
+            <span className="w-2.5 h-2.5 rounded-full border border-current transition-colors" />
+          </button>
+        </div>
       </header>
 
       <ChatWindow messages={messages} isLoading={isLoading} fading={false} />
@@ -107,6 +136,9 @@ export default function Home() {
       />
 
       {still && <StillSpace onReturn={() => setStill(false)} />}
+      {mirrorOpen && (
+        <MirrorReport data={mirrorData} loading={mirrorLoading} onClose={() => setMirrorOpen(false)} />
+      )}
     </main>
   )
 }

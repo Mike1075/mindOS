@@ -119,6 +119,46 @@ export async function getPresenceContext(userId: string): Promise<PresenceContex
   }
 }
 
+export interface MirrorData {
+  conversationCount: number
+  userMessageCount: number
+  voices: { label: string; count: number }[]
+  hourCounts: number[] // 长度 24
+}
+
+/**
+ * 用户镜子报告数据：跨时间的纵向模式。用户主动拉取，绝不推送（V2 §3）。
+ * 全部从本人 RLS 可读的源表实时计算，不落库、不在对话中弹出。
+ */
+export async function getMirrorData(userId: string): Promise<MirrorData | null> {
+  const sb = getSupabase()
+  if (!sb) return null
+  try {
+    const [convRes, voicesRes, msgRes] = await Promise.all([
+      sb.from('conversations').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+      sb
+        .from('belief_voices')
+        .select('voice_label, occurrence_count')
+        .eq('user_id', userId)
+        .order('occurrence_count', { ascending: false }),
+      sb.from('messages').select('created_at').eq('user_id', userId).eq('role', 'user'),
+    ])
+    const hourCounts = new Array(24).fill(0)
+    const msgs = msgRes.data ?? []
+    msgs.forEach((m) => {
+      hourCounts[new Date(m.created_at).getHours()]++
+    })
+    return {
+      conversationCount: convRes.count ?? 0,
+      userMessageCount: msgs.length,
+      voices: (voicesRes.data ?? []).map((v) => ({ label: v.voice_label, count: v.occurrence_count })),
+      hourCounts,
+    }
+  } catch {
+    return null
+  }
+}
+
 type ClientEvent = 'session_start' | 'message_sent' | 'draft_discarded' | 'void_entered'
 
 /** 行为事件埋点（EMI 触发源 / 时间形状原料）。 */
