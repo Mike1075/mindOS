@@ -3,7 +3,7 @@ import { streamText } from 'ai'
 import { NextRequest } from 'next/server'
 import { checkSafety } from '@/lib/safety'
 import { getSystemPrompt } from '@/lib/system-prompt'
-import { GATEWAY_BASE_URL, MODEL_ID, MAX_TURNS } from '@/lib/config'
+import { GATEWAY_BASE_URL, MODEL_ID, MAX_TURNS, REASONING_EFFORT } from '@/lib/config'
 
 export const runtime = 'edge'
 
@@ -80,6 +80,10 @@ export async function POST(req: NextRequest) {
     model: gateway(MODEL_ID),
     system: getSystemPrompt() + presenceDirective(presence as Presence | undefined),
     messages,
+    // 推理档位（仅当配置了非空 REASONING_EFFORT 时下发；便于未来切换到推理模型）
+    ...(REASONING_EFFORT
+      ? { providerOptions: { openaiCompatible: { reasoning_effort: REASONING_EFFORT } } }
+      : {}),
   })
 
   return result.toDataStreamResponse()
