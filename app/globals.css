@@ -3,16 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --base: #17150f;
-  --surface: #1f1c14;
-  --raised: #27231a;
-  --line: #2e2a20;
-  --ink: #ece7da;
-  --ink-soft: #b7b1a2;
-  --ink-dim: #6e695c;
-  --ink-faint: #46423a;
-  --celadon: #8fb0a2;
-  --celadon-dim: #5e7167;
+  /* 天鹅绒高级深紫 + 6个9纯金 */
+  --base: #1a1028;
+  --surface: #251739;
+  --raised: #2f2048;
+  --line: #3b2a55;
+  --ink: #ecd28a; /* 纯紫金，正文 */
+  --ink-soft: #e6cf94; /* 柔金，镜语 */
+  --ink-dim: #9a86b0; /* 雾紫灰，次要 */
+  --ink-faint: #5e4f72; /* 淡紫，提示 */
+  --gold: #ffd86a; /* 纯金，点缀/高亮 */
+  --gold-dim: #c2a55e; /* 暗金 */
 }
 
 * {
@@ -34,8 +35,8 @@ body {
 
 body {
   min-height: 100dvh;
-  /* 暮色微光：顶部一抹暖光，向下沉入暖炭黑 */
-  background: radial-gradient(125% 80% at 50% -8%, #221e14 0%, #17150f 52%);
+  /* 天鹅绒：顶部一抹紫光，向下沉入深紫丝绒 */
+  background: radial-gradient(125% 85% at 50% -8%, #311e4a 0%, #1d1230 46%, #160c22 100%);
   background-attachment: fixed;
 }
 
@@ -51,13 +52,13 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a261d;
+  background: #3a2a55;
   border-radius: 3px;
 }
 
 ::selection {
-  background: rgba(143, 176, 162, 0.18);
-  color: var(--ink);
+  background: rgba(255, 216, 106, 0.2);
+  color: var(--gold);
 }
 
 /* 动效 */
@@ -83,11 +84,11 @@ body {
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.45;
+    opacity: 0.4;
   }
   50% {
     transform: scale(1.16);
-    opacity: 0.85;
+    opacity: 0.8;
   }
 }
 @keyframes dotPulse {

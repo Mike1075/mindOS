@@ -49,7 +49,7 @@ export default function ChatWindow({ messages, isLoading, fading }: ChatWindowPr
               {[0, 200, 400].map((d) => (
                 <span
                   key={d}
-                  className="w-1.5 h-1.5 rounded-full bg-celadon-dim"
+                  className="w-1.5 h-1.5 rounded-full bg-gold-dim"
                   style={{ animation: 'dotPulse 1.4s ease-in-out infinite', animationDelay: `${d}ms` }}
                 />
               ))}

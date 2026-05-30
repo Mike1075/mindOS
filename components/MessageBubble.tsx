@@ -29,7 +29,7 @@ export default function MessageBubble({ role, content }: MessageBubbleProps) {
   return (
     <div className="flex justify-start mb-9 rise-in">
       <div className="max-w-[90%]">
-        <span className="block mb-2.5 text-[10px] tracking-[0.45em] text-celadon-dim">镜</span>
+        <span className="block mb-2.5 text-[10px] tracking-[0.45em] text-gold-dim">镜</span>
         <p className="font-song text-[16px] leading-[2.05] text-ink-soft whitespace-pre-wrap break-words">
           {display}
         </p>

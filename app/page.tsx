@@ -110,14 +110,14 @@ export default function Home() {
           <button
             onClick={openMirror}
             aria-label="镜中回望"
-            className="text-[10px] tracking-[0.3em] text-ink-faint hover:text-celadon-dim transition-colors"
+            className="text-[10px] tracking-[0.3em] text-ink-faint hover:text-gold-dim transition-colors"
           >
             回望
           </button>
           <button
             onClick={enterStill}
             aria-label="进入停留"
-            className="group flex items-center gap-2 text-ink-faint hover:text-celadon-dim transition-colors"
+            className="group flex items-center gap-2 text-ink-faint hover:text-gold-dim transition-colors"
           >
             <span className="text-[10px] tracking-[0.3em]">停留</span>
             <span className="w-2.5 h-2.5 rounded-full border border-current transition-colors" />

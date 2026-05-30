@@ -11,12 +11,12 @@ export default function StillSpace({ onReturn }: StillSpaceProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8 soft-in"
-      style={{ background: 'radial-gradient(130% 90% at 50% 38%, #1e1a12 0%, #131109 70%)' }}
+      style={{ background: 'radial-gradient(130% 90% at 50% 38%, #2a1a40 0%, #150b20 70%)' }}
     >
       <div className="flex flex-col items-center text-center">
         <div className="relative mb-14 flex items-center justify-center">
-          <div className="w-24 h-24 rounded-full border border-celadon-dim/40 breathe" />
-          <div className="absolute w-2 h-2 rounded-full bg-celadon/60" />
+          <div className="w-24 h-24 rounded-full border border-gold-dim/40 breathe" />
+          <div className="absolute w-2 h-2 rounded-full bg-gold/60" />
         </div>
 
         <p className="font-song text-ink-soft text-[18px] leading-loose mb-3">只是停在这里。</p>
@@ -28,7 +28,7 @@ export default function StillSpace({ onReturn }: StillSpaceProps) {
 
         <button
           onClick={onReturn}
-          className="text-[12px] text-ink-dim hover:text-ink-soft transition-colors tracking-[0.3em] border border-line hover:border-celadon-dim rounded-full px-7 py-2.5"
+          className="text-[12px] text-ink-dim hover:text-ink-soft transition-colors tracking-[0.3em] border border-line hover:border-gold-dim rounded-full px-7 py-2.5"
         >
           回到对话
         </button>

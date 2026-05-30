@@ -28,7 +28,7 @@ export default function MirrorReport({ data, loading, onClose }: MirrorReportPro
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto soft-in"
-      style={{ background: 'radial-gradient(130% 90% at 50% 0%, #1e1a12 0%, #131109 65%)' }}
+      style={{ background: 'radial-gradient(130% 90% at 50% 0%, #2a1a40 0%, #150b20 65%)' }}
     >
       <div className="max-w-lg mx-auto px-7 py-8 min-h-full flex flex-col">
         <div className="flex items-center justify-between mb-10">
@@ -67,7 +67,7 @@ export default function MirrorReport({ data, loading, onClose }: MirrorReportPro
             {/* 常来的声音 */}
             {data.voices.length > 0 && (
               <section>
-                <p className="text-[10px] tracking-[0.3em] text-celadon-dim mb-5">常来的声音</p>
+                <p className="text-[10px] tracking-[0.3em] text-gold-dim mb-5">常来的声音</p>
                 <div className="space-y-4">
                   {data.voices.map((v) => (
                     <div key={v.label} className="flex items-baseline justify-between border-b border-line/60 pb-3">
@@ -84,13 +84,13 @@ export default function MirrorReport({ data, loading, onClose }: MirrorReportPro
 
             {/* 你常来的时辰 */}
             <section>
-              <p className="text-[10px] tracking-[0.3em] text-celadon-dim mb-5">你常来的时辰</p>
+              <p className="text-[10px] tracking-[0.3em] text-gold-dim mb-5">你常来的时辰</p>
               <div className="flex items-end justify-between gap-3 h-28">
                 {BUCKETS.map((b, i) => (
                   <div key={b.label} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full flex items-end h-20">
                       <div
-                        className="w-full rounded-t bg-celadon-dim/50"
+                        className="w-full rounded-t bg-gold-dim/50"
                         style={{ height: `${(bucketCounts[i] / maxBucket) * 100}%`, minHeight: bucketCounts[i] > 0 ? '4px' : '0' }}
                       />
                     </div>
