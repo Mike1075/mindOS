@@ -87,33 +87,25 @@ export async function persistTurn(params: {
 }
 
 export interface PresenceContext {
-  cooldown: boolean
-  highIntensity: boolean
   repeatedVoices: string[]
 }
 
 /**
  * 读取本用户当前的"在场质地"信号（RLS：本人可读）。
- * 静默分析层的产出在这里反哺实时对话——这是 V2 闭环的关键。
+ * 只保留"反复负面声音→不与固化身份共谋"这一条；已退役"升温→变冷"的强度/冷却信号
+ * （生态学谬误 + 实测无效，违背"先是个温暖的人"的全局原则）。
  */
 export async function getPresenceContext(userId: string): Promise<PresenceContext | null> {
   const sb = getSupabase()
   if (!sb) return null
   try {
-    const { data: st } = await sb
-      .from('user_state')
-      .select('consecutive_high_intensity_turns, cooldown_until')
-      .eq('user_id', userId)
-      .maybeSingle()
     const { data: voices } = await sb
       .from('belief_voices')
       .select('voice_label, occurrence_count')
       .eq('user_id', userId)
       .gte('occurrence_count', 3)
-    const cooldown = !!(st?.cooldown_until && new Date(st.cooldown_until).getTime() > Date.now())
-    const highIntensity = (st?.consecutive_high_intensity_turns ?? 0) >= 2
     const repeatedVoices = (voices ?? []).map((v) => v.voice_label)
-    return { cooldown, highIntensity, repeatedVoices }
+    return { repeatedVoices }
   } catch {
     return null
   }

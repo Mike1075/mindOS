@@ -27,27 +27,19 @@ function staticStream(text: string): Response {
 }
 
 interface Presence {
-  cooldown?: boolean
-  highIntensity?: boolean
   repeatedVoices?: string[]
 }
 
-// 静默分析层 → 实时在场质地调节（V2 §3 VAILs 防护的实时反哺）
+// 静默分析层 → 实时在场质地调节。
+// 注：已退役"升温→变安静/变冷"分支——那是把群体平均结论当个体戒律的生态学谬误，
+// 且实测既不触发也不生效，更违背"先是个温暖的人"的全局原则。只保留叙事外化一条：
+// 不与一个固化的负面身份共谋（这是亲生命的，不是疏远）。
 function presenceDirective(p?: Presence): string {
   if (!p) return ''
-  const parts: string[] = []
-  if (p.cooldown || p.highIntensity) {
-    parts.push(
-      '对方近期情绪强度偏高。此刻更安静、更简短、多留白，不深入挖掘任何议题，并自然留一个开放的出口。'
-    )
-  }
   if (p.repeatedVoices && p.repeatedVoices.length > 0) {
-    parts.push(
-      `这些自我贬低的声音已在过往反复出现：${p.repeatedVoices.join('、')}。减少而非增加对它们的聚焦——不要确认、不要深挖，更多停留在当下或身体感受里。`
-    )
+    return `\n\n【此刻的在场质地（后台静默分析，不要向对方提及）】\n这些自我贬低的说法已反复出现：${p.repeatedVoices.join('、')}。不要把它们确认成"他是谁"——温柔地让它们是会来也会走的声音，而不是身份。这不是疏远，是不与一个固化的负面自我定义共谋。`
   }
-  if (parts.length === 0) return ''
-  return `\n\n【此刻的在场质地（后台静默分析，不要向对方提及）】\n${parts.join('\n')}`
+  return ''
 }
 
 export async function POST(req: NextRequest) {
