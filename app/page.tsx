@@ -6,6 +6,7 @@ import ChatWindow from '@/components/ChatWindow'
 import InputBar from '@/components/InputBar'
 import StillSpace from '@/components/StillSpace'
 import MirrorReport from '@/components/MirrorReport'
+import Threshold from '@/components/Threshold'
 import {
   ensureUser,
   createConversation,
@@ -49,12 +50,32 @@ export default function Home() {
     },
   })
 
+  // 知情同意门槛：null=未知(读 localStorage 前) / false=需展示 / true=已同意
+  const [consented, setConsented] = useState<boolean | null>(null)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [still, setStill] = useState(false)
   const [mirrorOpen, setMirrorOpen] = useState(false)
   const [mirrorData, setMirrorData] = useState<MirrorData | null>(null)
   const [mirrorLoading, setMirrorLoading] = useState(false)
   const processed = useRef<Set<string>>(new Set())
+
+  // 知情同意：首次进入展示门槛，确认后写 localStorage 不再弹
+  useEffect(() => {
+    try {
+      setConsented(localStorage.getItem('mindos_consent_v1') === '1')
+    } catch {
+      setConsented(true) // localStorage 不可用时不阻断进入
+    }
+  }, [])
+
+  function enterFromThreshold() {
+    try {
+      localStorage.setItem('mindos_consent_v1', '1')
+    } catch {
+      /* 忽略：隐私模式下不可写 */
+    }
+    setConsented(true)
+  }
 
   // 会话启动：匿名登录 + 记录 session_start
   useEffect(() => {
@@ -101,6 +122,11 @@ export default function Home() {
     setMirrorData(uid ? await getMirrorData(uid) : null)
     setMirrorLoading(false)
   }
+
+  // 读取同意状态前先留白，避免门槛/对话之间闪烁
+  if (consented === null) return <main className="h-[100dvh] bg-base" />
+  // 首次进入：先过知情同意门槛
+  if (!consented) return <Threshold onEnter={enterFromThreshold} />
 
   return (
     <main className="flex flex-col h-[100dvh]">
