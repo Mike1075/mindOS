@@ -6,5 +6,3 @@ export const GATEWAY_BASE_URL = 'https://ai-gateway.vercel.sh/v1'
 export const MODEL_ID = 'openai/gpt-5.4'
 // 推理档位：gpt-5.4 实测 rtok=0（非推理流式，首字快），不传该参数。
 export const REASONING_EFFORT = ''
-export const MAX_TURNS = 20
-export const SESSION_TIMEOUT_MS = 45 * 60 * 1000

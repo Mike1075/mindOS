@@ -7,7 +7,6 @@ interface MessageBubbleProps {
 
 function clean(text: string): string {
   return text
-    .replace(/\[SESSION_END\]/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }

@@ -3,7 +3,7 @@ import { streamText } from 'ai'
 import { NextRequest } from 'next/server'
 import { checkSafety } from '@/lib/safety'
 import { getSystemPrompt } from '@/lib/system-prompt'
-import { GATEWAY_BASE_URL, MODEL_ID, MAX_TURNS, REASONING_EFFORT } from '@/lib/config'
+import { GATEWAY_BASE_URL, MODEL_ID, REASONING_EFFORT } from '@/lib/config'
 
 export const runtime = 'edge'
 
@@ -60,14 +60,6 @@ export async function POST(req: NextRequest) {
     if (isCrisis) {
       return staticStream(response)
     }
-  }
-
-  // 会话软上限：开放性收束，绝不在情绪峰值硬切（对齐 V2 — 永远留一个开放出口）
-  const userTurns = messages.filter((m: { role: string }) => m.role === 'user').length
-  if (userTurns > MAX_TURNS) {
-    return staticStream(
-      '今天，我们先在这里停一停。\n\n你带走的不是我说过的话，是你自己看见的东西。它会在你离开屏幕之后，继续慢慢清晰起来。[SESSION_END]'
-    )
   }
 
   const gateway = createOpenAICompatible({

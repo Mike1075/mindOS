@@ -5,12 +5,11 @@ import { ChangeEvent, FormEvent, KeyboardEvent, useRef, useEffect } from 'react'
 interface InputBarProps {
   input: string
   isLoading: boolean
-  disabled: boolean
   onInputChange: (e: ChangeEvent<HTMLTextAreaElement>) => void
   onSubmit: (e: FormEvent<HTMLFormElement>) => void
 }
 
-export default function InputBar({ input, isLoading, disabled, onInputChange, onSubmit }: InputBarProps) {
+export default function InputBar({ input, isLoading, onInputChange, onSubmit }: InputBarProps) {
   const ref = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -23,7 +22,7 @@ export default function InputBar({ input, isLoading, disabled, onInputChange, on
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      if (!disabled && !isLoading && input.trim()) {
+      if (!isLoading && input.trim()) {
         e.currentTarget.closest('form')?.requestSubmit()
       }
     }
@@ -38,14 +37,14 @@ export default function InputBar({ input, isLoading, disabled, onInputChange, on
             value={input}
             onChange={onInputChange}
             onKeyDown={onKeyDown}
-            disabled={disabled || isLoading}
-            placeholder={disabled ? '此刻已经足够。' : '说点此刻真实的……'}
+            disabled={isLoading}
+            placeholder="说点此刻真实的……"
             rows={1}
             className="flex-1 resize-none bg-transparent text-[14.5px] leading-relaxed text-ink focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
           />
           <button
             type="submit"
-            disabled={disabled || isLoading || !input.trim()}
+            disabled={isLoading || !input.trim()}
             aria-label="送出"
             className="shrink-0 w-8 h-8 mb-0.5 flex items-center justify-center rounded-full text-ink-dim hover:text-gold disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >

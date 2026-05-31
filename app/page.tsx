@@ -52,12 +52,10 @@ export default function Home() {
 
   // 知情同意门槛：null=未知(读 localStorage 前) / false=需展示 / true=已同意
   const [consented, setConsented] = useState<boolean | null>(null)
-  const [sessionEnded, setSessionEnded] = useState(false)
   const [still, setStill] = useState(false)
   const [mirrorOpen, setMirrorOpen] = useState(false)
   const [mirrorData, setMirrorData] = useState<MirrorData | null>(null)
   const [mirrorLoading, setMirrorLoading] = useState(false)
-  const processed = useRef<Set<string>>(new Set())
 
   // 知情同意：首次进入展示门槛，确认后写 localStorage 不再弹
   useEffect(() => {
@@ -89,16 +87,6 @@ export default function Home() {
       active = false
     }
   }, [])
-
-  // 检测会话软上限（开放性收束），仅禁用输入
-  useEffect(() => {
-    if (isLoading) return
-    const last = messages[messages.length - 1]
-    if (!last || last.role !== 'assistant') return
-    if (processed.current.has(last.id)) return
-    processed.current.add(last.id)
-    if (last.content.includes('[SESSION_END]')) setSessionEnded(true)
-  }, [messages, isLoading])
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -156,7 +144,6 @@ export default function Home() {
       <InputBar
         input={input}
         isLoading={isLoading}
-        disabled={sessionEnded}
         onInputChange={handleInputChange}
         onSubmit={onSubmit}
       />
