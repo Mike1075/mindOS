@@ -13,7 +13,7 @@
 
 | 模块 | 内容 | 文件 |
 |---|---|---|
-| **V2 对话核心** | Rogers 在场 + 叙事外化 + 体感停留 + 禅式气质；废除信念结晶/峰值留白 | `lib/system-prompt.ts` |
+| **V2 对话核心** | v0.3「真挚在场」：正向具身 + 真挚温暖 + 可调直接度 + few-shot；保留外化/体感/禅/安全内核，废除禁令墙写法、信念结晶、峰值留白 | `lib/system-prompt.ts` |
 | **急性熔断** | 自残/自杀规则正则前置扫描 → 固定关怀文案 + 危机热线 | `lib/safety.ts`、`app/api/chat/route.ts` |
 | **会话软上限** | 超 20 轮开放性收束，不在情绪峰值硬切 | `app/api/chat/route.ts` |
 | **暮色微光视觉** | 暖暗配色 + 宋体映照 + 大留白 + 呼吸/上浮动效 | `globals.css`、`tailwind.config.ts` |
@@ -25,7 +25,7 @@
 
 ### 技术栈
 - Next.js 15（App Router）+ React 19 + Tailwind 3
-- 推理：Vercel AI Gateway → `anthropic/claude-opus-4-8`（**待评估，见第四节**）
+- 推理：Vercel AI Gateway → `openai/gpt-5.4`（见 `lib/config.ts`；**仍待最终定稿，见第四节**）
 - 数据：Supabase（Postgres + Auth 匿名 + RLS）
 - 部署：Vercel（push main 自动构建）
 
@@ -87,6 +87,6 @@
 
 ## 四、待决策：大模型选型
 
-当前 `anthropic/claude-opus-4-8`。优先级：**性能 / 速度 / 成本的平衡**。
+当前 `openai/gpt-5.4`。优先级：**性能 / 速度 / 成本的平衡**。
 关键约束（比通用 benchmark 更重要）：本应用要求模型**严格遵循细腻的关系性约束**（不建议、不安慰、外化、留白、沉默）+ **安全**。
 → 选型结论与对比测试方案见对话讨论 / 后续补入本节。
