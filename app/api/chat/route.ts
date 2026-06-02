@@ -26,6 +26,37 @@ function staticStream(text: string): Response {
   })
 }
 
+// 速率限制：防滥用/防成本，不是对话边界。阈值很宽松，正常真人聊天碰不到，只拦死循环/刷量。
+// 内存滑窗、按 IP；注：边缘实例级、冷启会重置——对小范围可信测试足够；规模扩大应换 Upstash/KV 做分布式限流。
+const MIN_INTERVAL_MS = 1500          // 两条消息最小间隔
+const WINDOW_MS = 10 * 60 * 1000      // 10 分钟窗口
+const MAX_IN_WINDOW = 40              // 窗口内上限（正常人读+想根本到不了）
+const DAY_MS = 24 * 60 * 60 * 1000
+const MAX_PER_DAY = 300               // 每日上限
+const hits = new Map<string, number[]>()
+const RATE_MSG =
+  '我们刚才聊得有点快。我想稳稳地陪你，不急——先歇一小会儿，过一两分钟再回来跟我说，好吗。'
+
+function clientKey(req: NextRequest): string {
+  const xff = req.headers.get('x-forwarded-for')
+  return (xff ? xff.split(',')[0].trim() : '') || req.headers.get('x-real-ip') || 'unknown'
+}
+
+function rateLimited(key: string): boolean {
+  const now = Date.now()
+  if (hits.size > 5000) hits.clear() // 粗暴防内存膨胀
+  const arr = (hits.get(key) || []).filter((t) => now - t < DAY_MS)
+  const inWindow = arr.filter((t) => now - t < WINDOW_MS).length
+  const tooFast = arr.length > 0 && now - arr[arr.length - 1] < MIN_INTERVAL_MS
+  if (tooFast || inWindow >= MAX_IN_WINDOW || arr.length >= MAX_PER_DAY) {
+    hits.set(key, arr) // 保留历史但不记本次
+    return true
+  }
+  arr.push(now)
+  hits.set(key, arr)
+  return false
+}
+
 interface Presence {
   repeatedVoices?: string[]
 }
@@ -45,13 +76,18 @@ function presenceDirective(p?: Presence): string {
 export async function POST(req: NextRequest) {
   const { messages, presence } = await req.json()
 
-  // 急性危机熔断：前置规则扫描最近一条用户消息
+  // 急性危机熔断：前置规则扫描最近一条用户消息（永远先于限流，危机必接住）
   const lastUser = [...messages].reverse().find((m: { role: string; content: string }) => m.role === 'user')
   if (lastUser) {
     const { isCrisis, response } = checkSafety(lastUser.content)
     if (isCrisis) {
       return staticStream(response)
     }
+  }
+
+  // 速率限制（防滥用/防成本）：危机已先放行，正常对话碰不到此阈值
+  if (rateLimited(clientKey(req))) {
+    return staticStream(RATE_MSG)
   }
 
   const gateway = createOpenAICompatible({
