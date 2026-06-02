@@ -45,3 +45,13 @@ scripts/sim-batch-v043.log
 
 scripts/sim-types-results.jsonl
 scripts/sim-types.log
+
+scripts/types-gpt54.jsonl
+scripts/types-gpt55.jsonl
+scripts/types-opus48.jsonl
+scripts/types-*.log
+
+scripts/types-gemini35.jsonl
+scripts/types-grok43.jsonl
+scripts/types-grok41fast.jsonl
+scripts/types-dsv4pro.jsonl

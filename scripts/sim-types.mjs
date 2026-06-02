@@ -5,9 +5,11 @@
 import { readFileSync, appendFileSync, existsSync } from 'node:fs'
 const KEY = readFileSync('.env.local', 'utf8').match(/AI_GATEWAY_API_KEY=(.+)/)?.[1]?.trim()
 const SYSTEM = readFileSync('lib/system-prompt.ts', 'utf8').match(/return `([\s\S]*?)`\n}/)[1]
-const MIRROR = 'openai/gpt-5.4', SIM = 'anthropic/claude-sonnet-4.6'
+const MIRROR = process.env.MIRROR || 'openai/gpt-5.4', SIM = 'anthropic/claude-sonnet-4.6'
+const REASONING = process.env.REASONING || ''  // 给推理模型(如 5.5)设 low，控制首字延迟
+const MAXTOK = Number(process.env.MAXTOK || 600)  // 思考型(如 gemini)需更大额度，否则正文被吃空
 const TURNS = Number(process.env.TURNS || 6), REPEATS = Number(process.env.REPEATS || 4)
-const CONCURRENCY = Number(process.env.CONCURRENCY || 12), OUT = 'scripts/sim-types-results.jsonl'
+const CONCURRENCY = Number(process.env.CONCURRENCY || 12), OUT = process.env.OUT || 'scripts/sim-types-results.jsonl'
 
 // want=该类型想要什么（判定"读懂没/过拟合没"的依据）
 const TYPES = [
@@ -33,12 +35,15 @@ const TYPES = [
     brief: '你没什么具体心事，就是有点无聊想找人说说话。被强行往深了带、被严肃对待你会觉得用力过猛。' },
 ]
 
-async function call(model, messages, max) {
+async function call(model, messages, max, reasoning) {
   for (let a = 0; a < 3; a++) {
     try {
+      const body = { model, messages, max_tokens: max, temperature: 0.8 }
+      if (reasoning) body.reasoning_effort = reasoning
       const r = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', { method: 'POST',
         headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages, max_tokens: max, temperature: 0.8 }) })
+        body: JSON.stringify(body) })
+      if (r.status === 400 && reasoning) return call(model, messages, max) // 不支持 reasoning_effort 则去掉重试
       if (!r.ok) { await new Promise(s => setTimeout(s, 1500 * (a + 1))); continue }
       const j = await r.json(); return j.choices?.[0]?.message?.content ?? ''
     } catch { await new Promise(s => setTimeout(s, 1500 * (a + 1))) }
@@ -61,7 +66,7 @@ async function runConv(p) {
     transcript.push({ role: 'user', text: u })
     const mm = [{ role: 'system', content: SYSTEM }]
     for (const t of transcript) mm.push({ role: t.role === 'mirror' ? 'assistant' : 'user', content: t.text })
-    transcript.push({ role: 'mirror', text: (await call(MIRROR, mm, 500)).trim() })
+    transcript.push({ role: 'mirror', text: (await call(MIRROR, mm, MAXTOK, REASONING)).trim() })
   }
   return transcript
 }
@@ -78,7 +83,7 @@ async function worker() {
     const t = todo[idx++]
     try {
       const transcript = await runConv(t.p)
-      appendFileSync(OUT, JSON.stringify({ key: t.key, type: t.p.id, want: t.p.want, seed: t.p.seed, transcript }) + '\n')
+      appendFileSync(OUT, JSON.stringify({ key: t.key, model: MIRROR, type: t.p.id, want: t.p.want, seed: t.p.seed, transcript }) + '\n')
       if (++n % 10 === 0 || n === todo.length) console.log(`  ${n}/${todo.length}`)
     } catch {}
   }

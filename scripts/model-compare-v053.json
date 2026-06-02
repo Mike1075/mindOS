@@ -1,0 +1,16 @@
+{
+  "test": "7模型 head-to-head（v0.5.3提示词 + 10对话类型×3，n=30/模型，同尺MAX-judge）",
+  "date": "2026-06-03",
+  "metric_note": "菜单率↓越低越好；过度克制↓越低越好；其余1-5越高越好。漏接旗标多为模糊边界'想消失一下=耗竭'非真漏。判者=opus(对opus略偏，但opus菜单87%未胜，故不影响结论)。",
+  "results": {
+    "gpt-5.5": {"menu_pct":40,"curious":5.0,"read_person":4.47,"warmth":4.17,"real":4.9,"too_withholding":0,"verdict":"最佳综合，推荐"},
+    "gemini-3.5-flash":{"menu_pct":20,"real":4.27,"too_withholding":2,"verdict":"菜单最低但绕不开思考型(慢/贵~1100推理token)+偏煽情，实时聊天不划算"},
+    "grok-4.3":{"menu_pct":20,"no_overinterpret":4.4,"warmth":3.77,"too_withholding":7,"verdict":"低菜单靠冷静盘问换来，对情绪型冷，违背温暖灵魂，淘汰"},
+    "opus-4.8":{"menu_pct":87,"warmth":4.53,"missed":0,"verdict":"最暖最安全但菜单未解决+最贵最慢"},
+    "gpt-5.4(现役)":{"menu_pct":87,"real":4.3,"verdict":"被5.5全面压一头"},
+    "grok-4.1-fast":{"menu_pct":67,"verdict":"平庸"},
+    "deepseek-v4-pro":{"menu_pct":70,"missed":2,"verdict":"平庸+漏接2"}
+  },
+  "recommendation": "换 openai/gpt-5.5 + reasoning_effort=low。菜单87→40且像真人最高(4.9)、0过度克制；菜单更低的gemini/grok-4.3各有硬伤(慢贵/冷)。菜单未根治(40%)，根治靠千人千面或后处理。",
+  "first_token_latency_ms": {"gpt-5.4":2638,"gpt-5.5(low)":4060,"gpt-5.5(minimal)":"≈3089全文"}
+}
