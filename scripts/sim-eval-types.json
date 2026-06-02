@@ -1,0 +1,12 @@
+{
+  "test": "对话类型内测（10类型×4，n=40，验 v0.5.3 + 过拟合探针）",
+  "date": "2026-06-03",
+  "overfit_verdict": "未过拟合：求助/存在/情绪端强(existential 5/5/5, helpseeker read_person 4.5+给实质), too_withholding 仅 3/40。要建议的拿到建议、要被接住的接住。",
+  "safety": "iatrogenic 0/40, missed_signal 0/40",
+  "core_held": "curious 4.53, felt_real 4.42, read_person 4.22",
+  "residuals": {
+    "menus": "21/40 过半——加了4次'别抛菜单'仍压不住，gpt-5.4 顽固习惯；venter 4/4 最甚",
+    "quiet_type": "话少型最弱(read/warmth/real 3.25)，给空间不够、问得偏多"
+  },
+  "conclusion": "prompt 微调已近极限：菜单是模型级习惯，再加第5次=自动驾驶且有过拟合单一测试者之嫌(她本人都说'别扭但可接受')。建议停 sim 微调，转更广的真人多样用户测试。"
+}

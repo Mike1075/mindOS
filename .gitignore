@@ -42,3 +42,6 @@ scripts/sim-batch-v042.log
 
 scripts/sim-batch-v043.jsonl
 scripts/sim-batch-v043.log
+
+scripts/sim-types-results.jsonl
+scripts/sim-types.log
