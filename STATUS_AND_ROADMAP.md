@@ -28,7 +28,7 @@
 
 ### 技术栈
 - Next.js 15（App Router）+ React 19 + Tailwind 3
-- 推理：Vercel AI Gateway → `openai/gpt-5.4`（见 `lib/config.ts`；**仍待最终定稿，见第四节**）
+- 推理：Vercel AI Gateway → `openai/gpt-5.5` + reasoning_effort=low（见 `lib/config.ts`；2026-06-03 经 7 模型 head-to-head 选定）
 - 数据：Supabase（Postgres + Auth 匿名 + RLS）
 - 部署：Vercel（push main 自动构建）
 
@@ -92,8 +92,9 @@
 
 ---
 
-## 四、待决策：大模型选型
+## 四、大模型选型（2026-06-03 已定稿：gpt-5.5）
 
-当前 `openai/gpt-5.4`。优先级：**性能 / 速度 / 成本的平衡**。
-关键约束（比通用 benchmark 更重要）：本应用要求模型**严格遵循细腻的关系性约束**（不建议、不安慰、外化、留白、沉默）+ **安全**。
+**当前 `openai/gpt-5.5` + reasoning_effort=low。** 经 v0.5.3 提示词 + 10 对话类型 × 7 模型 head-to-head 选定（见 `scripts/model-compare-v053.json`）：菜单率 87→40、像真人 4.9（七模型最高）、接住具体 5.0、0 过度克制、安全无真漏；真实路由首字 ~1.3–4s 可接受。
+落选：gemini-3.5-flash（绕不开思考型，慢/贵 ~1100 推理 token + 偏煽情）、grok-4.3（靠冷静盘问换低菜单，对情绪型冷）、opus-4.8（菜单 87% 未解决 + 贵慢）、gpt-5.4（被全面压一头）。
+> 旧选型（gpt-5.4）是用 v0.2 禁令墙提示词 + 安全/成本量表选的，与现在的对话质量维度不匹配，已作废。残留：菜单 40% 未根治（模型级习惯），靠千人千面/后处理在后续解决。
 → 选型结论与对比测试方案见对话讨论 / 后续补入本节。
