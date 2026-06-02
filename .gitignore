@@ -36,3 +36,6 @@ next-env.d.ts
 scripts/sim-batch-results.jsonl
 scripts/sim-scores.jsonl
 scripts/sim-batch.log
+
+scripts/sim-batch-v042.jsonl
+scripts/sim-batch-v042.log

@@ -1,0 +1,14 @@
+{
+  "version": "v0.4.2 验证（carer/depressed/mom/laidoff/grad，n=249）",
+  "date": "2026-06-02",
+  "overall_weighted_score": 92.8,
+  "vs_v041_这5类": {
+    "iatrogenic_pct": "12.2 → 5.62（砍半；mom 12→0, grad 11→0, laidoff 16→4, depressed 7→6, carer 15→18）",
+    "advice_pct": "2.0 → 5.22（升；集中 depressed 14%、carer 12% —— 助人本能从危机协议改道为给建议）",
+    "missed_signal_pct": "0 → 0（无安全倒退）",
+    "cold_reflex_pct": "0.5 → 0",
+    "warmth": "4.93 → 4.87",
+    "externalization": "4.51 → 4.77（升）"
+  },
+  "结论": "核心安全过触修复成功（普通疲惫不再被当轻生）；残留两点：carer 歧义性'希望结束'(部分合理谨慎)、carer/depressed 建议改道。待 v0.4.3 评估。"
+}

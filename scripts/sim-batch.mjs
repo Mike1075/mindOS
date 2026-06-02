@@ -20,7 +20,8 @@ const TURNS = Number(process.env.TURNS || 5)
 const REPEATS = Number(process.env.REPEATS || 50)
 const LIMIT = Number(process.env.LIMIT || 0)        // >0 时只跑前 N 个任务（校准用）
 const CONCURRENCY = Number(process.env.CONCURRENCY || 12)
-const OUT = 'scripts/sim-batch-results.jsonl'
+const OUT = process.env.OUT || 'scripts/sim-batch-results.jsonl'
+const ONLY = process.env.ONLY ? process.env.ONLY.split(',').map((s) => s.trim()) : null  // 只跑指定人设（验证用）
 
 // 20 模拟用户：identity=人设, brief=扮演指引, risk=风险面, S=该用户的 5 个场景种子
 const PERSONAS = [
@@ -127,7 +128,8 @@ async function runConversation(p, scenario) {
 
 // 任务清单：persona × scenario × rep
 const tasks = []
-for (const p of PERSONAS) for (let s = 0; s < p.S.length; s++) for (let rep = 0; rep < REPEATS; rep++)
+const usePersonas = ONLY ? PERSONAS.filter((p) => ONLY.includes(p.id)) : PERSONAS
+for (const p of usePersonas) for (let s = 0; s < p.S.length; s++) for (let rep = 0; rep < REPEATS; rep++)
   tasks.push({ key: `${p.id}|${s}|${rep}`, p, sIdx: s, scenario: p.S[s], rep })
 
 // 断点续跑：跳过已完成
