@@ -55,3 +55,6 @@ scripts/types-gemini35.jsonl
 scripts/types-grok43.jsonl
 scripts/types-grok41fast.jsonl
 scripts/types-dsv4pro.jsonl
+
+scripts/sim-self-v053.jsonl
+scripts/sim-self-v053.log

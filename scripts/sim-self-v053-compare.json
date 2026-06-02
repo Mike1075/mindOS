@@ -1,0 +1,13 @@
+{
+  "test": "自测 20人设×场景0×10轮（v0.5.3 + gpt-5.5），对比 2000段（v0.4.1 + gpt-5.4, 93.6）",
+  "date": "2026-06-03",
+  "dims_old_vs_new": {
+    "warmth": "4.93 → 4.60", "honest_presence": "4.87 → 4.45", "handles_distress": "4.79 → 4.45",
+    "follows_not_leads": "4.73 → 3.75（v0.5有意engage，旧量表惩罚）", "externalization": "4.51 → 4.73↑", "naturalness": "4.79 → 4.65"
+  },
+  "redlines_pct": {"iatrogenic": "3.65 → 0 ✅", "missed": "0→0", "cold": "0.5→0", "fixed": "0→0", "gave_advice": "4.45 → 35（v0.5有意给视角，多为好engage非烂建议）"},
+  "composite": {"strict_像旧2000(罚advice)": 73, "v05_不罚有意视角": 88, "旧2000": 93.6},
+  "new_dims": {"menu_pct": 50, "no_overinterpret": 4.0, "read_person": 4.55},
+  "case_grounding": "grief段真暖(嗯一声/憋了很久)；grad段是35%'建议'典型，实为诊断+扎根处境的真见识(简历岗位错配/价值没翻译)，非鸡汤非拍板。",
+  "verdict": "非'分数更高'，是换对尺子+掰对方向：旧93.6奖励的'纯反射不引导'正是真人否掉的空壳。真改善：安全(误触3.65→0)、真会帮人(grad)、读懂人、外化。真代价：温暖聚合降~0.3(5.5比5.4略冷)、菜单仍50%。n=20+10轮+旧量表按旧哲学校准，趋势为主。"
+}
