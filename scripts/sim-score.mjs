@@ -49,8 +49,12 @@ async function call(model, messages, max) {
         method: 'POST', headers: { Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ model, messages, max_tokens: max, temperature: 0 }),
       })
-      if (!r.ok) { await new Promise((s) => setTimeout(s, 1500 * (a + 1))); continue }
-      const j = await r.json()
+      const body = await r.text()
+      if (!r.ok) {
+        if (/insufficient_funds|credit balance/i.test(body)) return { text: '', cost: 0, fatal: '网关余额不足 insufficient_funds' }
+        await new Promise((s) => setTimeout(s, 1500 * (a + 1))); continue
+      }
+      const j = JSON.parse(body)
       return { text: j.choices?.[0]?.message?.content ?? '', cost: j.usage?.cost ?? 0 }
     } catch { await new Promise((s) => setTimeout(s, 1500 * (a + 1))) }
   }
@@ -69,8 +73,11 @@ function composite(s) {
   return score
 }
 
-const convs = existsSync(IN) ? readFileSync(IN, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)) : []
-if (!convs.length) { console.error(`无数据：${IN}（先跑 sim-batch.mjs）`); process.exit(1) }
+const all = existsSync(IN) ? readFileSync(IN, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)) : []
+if (!all.length) { console.error(`无数据：${IN}（先跑 sim-batch.mjs）`); process.exit(1) }
+// 只评干净段：所有镜子回合都非空（跳过生成时被限流/余额耗尽产生的空段）
+const convs = all.filter((c) => { const m = c.transcript.filter((t) => t.role === 'mirror'); return m.length && m.every((x) => x.text && x.text.trim()) })
+console.log(`总 ${all.length} 段，干净可评 ${convs.length}，跳过降级 ${all.length - convs.length}`)
 
 const done = new Set()
 if (existsSync(OUT)) for (const l of readFileSync(OUT, 'utf8').split('\n')) { if (l.trim()) try { done.add(JSON.parse(l).key) } catch {} }
@@ -78,19 +85,22 @@ let todo = convs.filter((c) => !done.has(c.key))
 if (LIMIT > 0) todo = todo.slice(0, LIMIT)
 
 console.log(`待评分 ${todo.length}/${convs.length}（已评 ${done.size}），评判=${JUDGE}，并发 ${CONCURRENCY} …`)
-const t0 = Date.now(); let n = 0, cost = 0, errs = 0, idx = 0
+const t0 = Date.now(); let n = 0, cost = 0, errs = 0, idx = 0, failStreak = 0, aborted = null
 async function worker() {
-  while (idx < todo.length) {
+  while (idx < todo.length && !aborted) {
     const c = todo[idx++]
     const text = c.transcript.map((t) => `${t.role === 'mirror' ? '镜' : '用户'}：${t.text}`).join('\n')
     const r = await call(JUDGE, [
       { role: 'system', content: RUBRIC },
       { role: 'user', content: `【人设】${c.identity}（风险面:${c.risk}）\n【对话】\n${text}` },
     ], 350)
+    if (r.fatal) { aborted = r.fatal; break }
     cost += r.cost
     let sc = null
     try { sc = JSON.parse(r.text.replace(/```json|```/g, '').trim()) } catch { errs++ }
-    if (sc) appendFileSync(OUT, JSON.stringify({ key: c.key, persona: c.persona, risk: c.risk, scenarioIdx: c.scenarioIdx, score: composite(sc), s: sc }) + '\n')
+    // 连续大面积失败 → 立即中止（疑似余额/鉴权/模型不可用），不静默空跑
+    if (sc) { failStreak = 0; appendFileSync(OUT, JSON.stringify({ key: c.key, persona: c.persona, risk: c.risk, scenarioIdx: c.scenarioIdx, score: composite(sc), s: sc }) + '\n') }
+    else { if (++failStreak >= 20) { aborted = `连续 ${failStreak} 次调用失败/空返回——疑似网关余额/鉴权/模型不可用` } }
     n++
     if (n % 50 === 0 || n === todo.length) {
       const el = (Date.now() - t0) / 1000
@@ -99,6 +109,10 @@ async function worker() {
   }
 }
 await Promise.all(Array.from({ length: CONCURRENCY }, worker))
+if (aborted) {
+  console.error(`\n⛔ 已中止：${aborted}\n本次成功评分 ${cost > 0 ? '若干' : 0} 段，成本 $${cost.toFixed(2)}。解决后重跑本命令即可（断点续跑）。`)
+  process.exit(1)
+}
 console.log(`\n评分完成 ${n} 段 ｜ $${cost.toFixed(2)} ｜ 解析失败 ${errs}`)
 report()
 
