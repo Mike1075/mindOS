@@ -31,3 +31,8 @@ next-env.d.ts
 
 # MCP config (contains access token)
 .mcp.json
+
+# 大规模模拟产出（本地，勿入库）
+scripts/sim-batch-results.jsonl
+scripts/sim-scores.jsonl
+scripts/sim-batch.log
