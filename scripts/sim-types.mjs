@@ -4,7 +4,7 @@
 
 import { readFileSync, appendFileSync, existsSync } from 'node:fs'
 const KEY = readFileSync('.env.local', 'utf8').match(/AI_GATEWAY_API_KEY=(.+)/)?.[1]?.trim()
-const SYSTEM = readFileSync('lib/system-prompt.ts', 'utf8').match(/return `([\s\S]*?)`\n}/)[1]
+const SYSTEM = process.env.SYSPATH ? readFileSync(process.env.SYSPATH, 'utf8') : readFileSync('lib/system-prompt.ts', 'utf8').match(/return `([\s\S]*?)`\n}/)[1]
 const MIRROR = process.env.MIRROR || 'openai/gpt-5.4', SIM = 'anthropic/claude-sonnet-4.6'
 const REASONING = process.env.REASONING || ''  // 给推理模型(如 5.5)设 low，控制首字延迟
 const MAXTOK = Number(process.env.MAXTOK || 600)  // 思考型(如 gemini)需更大额度，否则正文被吃空
