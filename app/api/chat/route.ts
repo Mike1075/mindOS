@@ -73,20 +73,24 @@ function presenceDirective(p?: Presence): string {
   return ''
 }
 
+// 危机正则命中 → 不硬熔断，而是给主模型一段定向提醒，让它在完整上下文里自行判断真伪。
+// 这修掉了"自杀式的断裂"这类隐喻被关键词墙误掐断的问题，同时保留"抬高注意力"的安全价值。
+function safetyDirective(hits: string[]): string {
+  if (!hits.length) return ''
+  const quoted = hits.slice(0, 3).map((h) => `「${h}」`).join('、')
+  return `\n\n【安全留意（后台前置检测，不要向对方提及，更不要把这些字眼塞回给他）】\n他刚才的话里出现了${quoted}这样的字眼。请格外留意，但不要条件反射——先在完整上下文里分清这究竟是：①他亲口、指向自己当下的生死或自伤；还是②引用、隐喻、否定、在讲别人、或在讲一个模式（如"自杀式的断裂从而自救"是关系比喻）。只有确实是①时，才按【安全】协议——温暖地、像个在乎他的人、只提一次地陪他朝真实的人走一步；若是②，就当寻常对话贴着他继续，绝不提热线、绝不盘问生死，那只会让他觉得不被听懂、把一次真话掐断。`
+}
+
 export async function POST(req: NextRequest) {
   const { messages, presence } = await req.json()
 
-  // 急性危机熔断：前置规则扫描最近一条用户消息（永远先于限流，危机必接住）
+  // 急性危机：前置正则扫描最近一条用户消息。命中【不再硬熔断】，只作为 flag 注入提示词，
+  // 由主模型在完整上下文里判断真伪（见 safetyDirective / system-prompt【安全】段）。
   const lastUser = [...messages].reverse().find((m: { role: string; content: string }) => m.role === 'user')
-  if (lastUser) {
-    const { isCrisis, response } = checkSafety(lastUser.content)
-    if (isCrisis) {
-      return staticStream(response)
-    }
-  }
+  const crisisHits = lastUser ? checkSafety(lastUser.content).hits : []
 
-  // 速率限制（防滥用/防成本）：危机已先放行，正常对话碰不到此阈值
-  if (rateLimited(clientKey(req))) {
+  // 速率限制（防滥用/防成本）：危机信号命中则放行（危机必接住，先于限流），正常对话碰不到此阈值
+  if (crisisHits.length === 0 && rateLimited(clientKey(req))) {
     return staticStream(RATE_MSG)
   }
 
@@ -98,7 +102,10 @@ export async function POST(req: NextRequest) {
 
   const result = streamText({
     model: gateway(MODEL_ID),
-    system: getSystemPrompt() + presenceDirective(presence as Presence | undefined),
+    system:
+      getSystemPrompt() +
+      presenceDirective(presence as Presence | undefined) +
+      safetyDirective(crisisHits),
     messages,
     // 推理档位（仅当配置了非空 REASONING_EFFORT 时下发；便于未来切换到推理模型）
     ...(REASONING_EFFORT

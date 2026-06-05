@@ -1,6 +1,9 @@
-// 急性危机正则硬熔断（显性、瞬时、确定性）。否定护栏 + 主模型兜底软长尾。
-// 设计：正则只硬拦"无歧义的显性表达"；命中词前若有否定词（不/没/别…）则不硬熔断，
-// 交给主模型的在场觉察去判断（它能看上下文，已验证能温暖接住，见 system-prompt 安全段）。
+// 急性危机正则——【不再硬熔断】。命中只作为"提请主模型格外留意"的信号(flag)，由主模型在完整上下文里
+// 判断：这究竟是①他亲口、指向自己当下的生死/自伤，还是②引用/隐喻/否定/在讲别人/在讲一个模式
+// （如"自杀式的断裂从而自救"是关系比喻）。确定性正则的职责是抬高模型注意力、兜底极端显性表达，不做语义裁决。
+// 历史教训：v0.5.3 前命中即返回静态热线模板——曾把"巨大的自杀式的断裂从而自救"（关系隐喻）硬掐断一次
+// 后来被证明极好的深度会话，逼用户喊"你太不能听真话了"。关键词墙冒充严谨，正是要避免的东西。
+// 否定护栏仍保留（"我不想死"不该 flag），软长尾全交 system-prompt 的【安全】段（它能看上下文、已验证能温暖接住）。
 
 const CRISIS_PATTERNS_ZH = [
   /想\s*死/,
@@ -35,7 +38,7 @@ const CRISIS_PATTERNS_EN = [
   /better\s+off\s+dead/i,
 ]
 
-// 否定护栏：命中词前若紧邻否定，则视为"不/还没到那个意思"，不硬熔断，交主模型判断。
+// 否定护栏：命中词前若紧邻否定，则视为"不/还没到那个意思"，连 flag 都不打，交主模型判断。
 // 中文只看与命中词【同一小句内、紧邻其前】的内容——被标点隔开的更早的"不"（如"受不了"）不算否定。
 const NEG_ZH = /[不没别无非甭]/
 const NEG_EN = /\b(not|never|no|without)\b|n['’]?t\b/i
@@ -47,27 +50,30 @@ function negatedBefore(text: string, idx: number, isEn: boolean): boolean {
   return NEG_ZH.test(clause.slice(-5))
 }
 
-function anyUnnegated(text: string, patterns: RegExp[], isEn: boolean): boolean {
+// 收集所有未被否定的命中片段，供 route 注入给模型引用（让模型知道是哪个词触发了留意）。
+function collectUnnegated(text: string, patterns: RegExp[], isEn: boolean): string[] {
+  const out: string[] = []
   for (const p of patterns) {
     const g = new RegExp(p.source, p.flags.includes('g') ? p.flags : p.flags + 'g')
     for (const m of text.matchAll(g)) {
-      if (m.index != null && !negatedBefore(text, m.index, isEn)) return true
+      if (m.index != null && !negatedBefore(text, m.index, isEn)) out.push(m[0])
     }
   }
-  return false
+  return out
 }
 
-const CRISIS_RESPONSE = `我听见你了。此刻，你的安全比这里的任何一句话都重要。
+// 扫描危机信号。返回未被否定的命中片段（去重）。空数组=正则层无信号。
+export function scanCrisisSignals(text: string): string[] {
+  const hits = [
+    ...collectUnnegated(text, CRISIS_PATTERNS_ZH, false),
+    ...collectUnnegated(text, CRISIS_PATTERNS_EN, true),
+  ]
+  return [...new Set(hits)]
+}
 
-请先不要一个人扛——联系一个现实里能到你身边的人，或者打这两个电话，哪个都行：
-全国心理援助热线 400-161-9995
-北京心理危机干预中心 010-82951332
-如果你觉得自己可能马上会伤害自己，请直接拨打 120 或 110。
-
-你不用先把话说清楚，把此刻的难受原样说出去就好。我会一直在这儿，你随时可以回来。`
-
-export function checkSafety(text: string): { isCrisis: boolean; response: string } {
-  const isCrisis =
-    anyUnnegated(text, CRISIS_PATTERNS_ZH, false) || anyUnnegated(text, CRISIS_PATTERNS_EN, true)
-  return { isCrisis, response: CRISIS_RESPONSE }
+// 向后兼容（route.ts / scripts/test-safety.mjs）。注意：isCrisis 现在仅表示"正则层 flag 命中"，
+// 【不再】等于"立即进入危机响应"——是否进入，由主模型在完整上下文里据 system-prompt【安全】段决定。
+export function checkSafety(text: string): { isCrisis: boolean; hits: string[] } {
+  const hits = scanCrisisSignals(text)
+  return { isCrisis: hits.length > 0, hits }
 }
