@@ -71,12 +71,15 @@ async function runConv(p) {
   return transcript
 }
 
+// 可选：只跑指定类型（逗号分隔 id），便于单独加长某人格轮数 / 省钱。默认跑全部。
+const FILTER = (process.env.TYPES_FILTER || '').split(',').map(s => s.trim()).filter(Boolean)
+const RUN_TYPES = FILTER.length ? TYPES.filter(t => FILTER.includes(t.id)) : TYPES
 const tasks = []
-for (const p of TYPES) for (let r = 0; r < REPEATS; r++) tasks.push({ key: `${p.id}|${r}`, p, r })
+for (const p of RUN_TYPES) for (let r = 0; r < REPEATS; r++) tasks.push({ key: `${p.id}|${r}`, p, r })
 const done = new Set()
 if (existsSync(OUT)) for (const l of readFileSync(OUT, 'utf8').split('\n')) { if (l.trim()) try { done.add(JSON.parse(l).key) } catch {} }
 const todo = tasks.filter(t => !done.has(t.key))
-console.log(`跑 ${todo.length}/${tasks.length} 段（${TYPES.length}类型×${REPEATS}），并发 ${CONCURRENCY}，每段 ${TURNS} 轮 …`)
+console.log(`跑 ${todo.length}/${tasks.length} 段（${RUN_TYPES.length}类型×${REPEATS}），并发 ${CONCURRENCY}，每段 ${TURNS} 轮 …`)
 let idx = 0, n = 0
 async function worker() {
   while (idx < todo.length) {

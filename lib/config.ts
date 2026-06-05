@@ -1,9 +1,16 @@
 export const GATEWAY_BASE_URL = 'https://ai-gateway.vercel.sh/v1'
-// 主模型：gpt-5.4（2026-06-03 运营决策回退）。
-// 7 模型 head-to-head（scripts/model-compare-v053.json）结论：菜单是【模型级习惯】，5.4/5.5/opus 均无法
-// 真正修掉（40–93%），真正解法在提示词/千人千面/后处理，不在换模型。既然换模型修不了菜单，选型就由
-// 成本+温暖+延迟+安全决定——5.4 全面更优：单价仅 5.5 的 ~1/2.3（$3.09 vs $7.09/千轮）、更暖（4.43 vs 4.17）、
-// 首字更快（2.6s vs 4s）、安全相当。gpt-5.5 仅"部分压菜单(87→40)+像真人 +0.4"，撑不起 2.3 倍长期成本。
-export const MODEL_ID = 'openai/gpt-5.4'
-// gpt-5.4 非推理流式，首字快，不传 reasoning_effort。
+// 主模型：minimax/minimax-m3（2026-06-05 切换，取代 gpt-5.4）。
+// 选型依据：v0.5.4 配对 A/B（10人格×3 + crisis 10轮 + M3「切挡给实质」增强版，Opus 自读判分）——
+// M3 在心镜核心的"在场/陪伴"上完胜 gpt-5.4：中文更自然口语、更克制（均 44 vs 79 字）、危机处理
+// 全节拍命中且更暖、不滑向接线流程；用户评"几个字就能让人落泪、敞开心扉，5.4 还找不到感觉"。
+// M3 原生短板 clarify-first（只澄清不给实质）已由 system-prompt v0.5.5【切挡给实质】块修复（A/B 验证有效）。
+// 成本更低：$0.30/$1.20（入/出，比 gpt-5.4 便宜）。
+// 取舍：延迟内生且重——短回复首字 ~2-7s，长深回复总耗时可达 ~30-120s（M3 自适应思考型）。
+// 关思考？M3 原生支持 thinking:{type:"disabled"}，但【实测 Vercel gateway 不认】：传 disabled 仍在思考、
+// 反而更慢（11-25s vs adaptive ~8s）。要真关只能绕开 gateway 直连 minimaxi 原生 API（大改）。且实测关思考会
+// 让它退回 clarify-first、不给实质——深度洞察正出自思考，所以 adaptive（思考 ON）本就是心镜要的配置，延迟是质量的代价。
+// 残留风险（真人测试盯）：① 长回复延迟体感；② nuanced 细则遵从略弱于 5.4（venter 护栏偶踩）。
+export const MODEL_ID = 'minimax/minimax-m3'
+// M3 自适应思考（adaptive thinking，官方推荐）：不传任何思考参数，交模型按难度自决。
+// 注：reasoning_effort 与 thinking 参数经 gateway 均无效，故 route.ts 不下发（REASONING_EFFORT='' → 不传）。
 export const REASONING_EFFORT = ''

@@ -63,3 +63,5 @@ scripts/ab-v053.jsonl
 scripts/ab-v054.jsonl
 scripts/ab-scores.jsonl
 scripts/ab-*.log
+scripts/m3-*.jsonl
+scripts/m3-*.log
