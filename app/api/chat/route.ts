@@ -81,6 +81,31 @@ function safetyDirective(hits: string[]): string {
   return `\n\n【安全留意（后台前置检测，不要向对方提及，更不要把这些字眼塞回给他）】\n他刚才的话里出现了${quoted}这样的字眼。请格外留意，但不要条件反射——先在完整上下文里分清这究竟是：①他亲口、指向自己当下的生死或自伤；还是②引用、隐喻、否定、在讲别人、或在讲一个模式（如"自杀式的断裂从而自救"是关系比喻）。只有确实是①时，才按【安全】协议——温暖地、像个在乎他的人、只提一次地陪他朝真实的人走一步；若是②，就当寻常对话贴着他继续，绝不提热线、绝不盘问生死，那只会让他觉得不被听懂、把一次真话掐断。`
 }
 
+// 预热：入口加载即由前端 fire-and-forget 打一发 GET。
+// 目的——把首条从「冷启 20-30s」拉回「热实例 ~6s」。实测模型 TTFB 稳定 4-6s（无每调用冷启尖峰），
+// 故 20-30s 出在 edge 函数 / gateway→M3 provider 实例的冷启上。GET 命中即焐热本路由的 edge 实例，
+// 内部再发一个极小调用（max_tokens:1）焐热 gateway 建连与 provider 实例。成本可忽略，失败静默。
+export async function GET() {
+  try {
+    await fetch(`${GATEWAY_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.AI_GATEWAY_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: MODEL_ID,
+        messages: [{ role: 'user', content: '嗯' }],
+        max_tokens: 16, // 1 会让自适应思考截断成不可解析 JSON；16 既干净返回又走一遍真实思考路径，焐热最到位
+        stream: false,
+      }),
+    })
+  } catch {
+    /* 预热是 best-effort，失败不影响正常对话 */
+  }
+  return new Response('ok', { headers: { 'Cache-Control': 'no-store' } })
+}
+
 export async function POST(req: NextRequest) {
   const { messages, presence } = await req.json()
 

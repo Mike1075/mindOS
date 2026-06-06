@@ -75,6 +75,12 @@ export default function Home() {
     setConsented(true)
   }
 
+  // 预热：一进门就 fire-and-forget 焐热 /api/chat 的 edge 实例 + gateway→M3 链路。
+  // 用户读门槛/打字的空窗里完成，真正首条即热实例 ~6s，而非冷启 20-30s。失败无所谓。
+  useEffect(() => {
+    void fetch('/api/chat', { method: 'GET' }).catch(() => {})
+  }, [])
+
   // 会话启动：匿名登录 + 记录 session_start
   useEffect(() => {
     let active = true
