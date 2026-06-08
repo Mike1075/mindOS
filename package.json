@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.2.0",
+    "@ricky0123/vad-web": "^0.0.30",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
     "ai": "^4.0.0",

@@ -7,6 +7,7 @@ import InputBar from '@/components/InputBar'
 import StillSpace from '@/components/StillSpace'
 import MirrorReport from '@/components/MirrorReport'
 import Threshold from '@/components/Threshold'
+import { useVoice } from '@/lib/useVoice'
 import {
   ensureUser,
   createConversation,
@@ -25,7 +26,7 @@ export default function Home() {
   const pendingUserText = useRef('')
   const sentAtRef = useRef<string | null>(null)
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, handleInputChange, setInput, append, isLoading } = useChat({
     api: '/api/chat',
     onFinish: async (message: Message) => {
       const uid = userIdRef.current
@@ -94,15 +95,43 @@ export default function Home() {
     }
   }, [])
 
+  // 统一发送：打字与语音两条路径共用，都带在场质地、走同一 /api/chat（安全/持久化全复用）。
+  async function sendUserMessage(text: string) {
+    pendingUserText.current = text
+    sentAtRef.current = new Date().toISOString()
+    const presence = userIdRef.current ? await getPresenceContext(userIdRef.current) : null
+    await append({ role: 'user', content: text }, { body: { presence } })
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!input.trim()) return
-    pendingUserText.current = input
-    sentAtRef.current = new Date().toISOString()
-    // 读取在场质地（静默分析层反哺），随请求传给路由注入提示词
-    const presence = userIdRef.current ? await getPresenceContext(userIdRef.current) : null
-    handleSubmit(e, { body: { presence } })
+    const text = input.trim()
+    if (!text) return
+    setInput('')
+    if (voice.enabled) voice.beginTurn() // 语音开启时，打字发问也朗读回复
+    await sendUserMessage(text)
   }
+
+  // 语音：STT 转写完成 → 走同一发送链路（hook 内部已先 beginTurn 转「思考中」）
+  const voice = useVoice({
+    onTranscript: (text) => {
+      void sendUserMessage(text)
+    },
+  })
+
+  // 把 useChat 的流式 AI 文本喂给语音层：边流边按句合成播放；流结束冲刷尾句。
+  const flushedIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!voice.enabled) return
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'assistant') return
+    if (isLoading) {
+      voice.speakStreaming(last.content)
+    } else if (flushedIdRef.current !== last.id) {
+      voice.endSpeaking(last.content)
+      flushedIdRef.current = last.id
+    }
+  }, [messages, isLoading, voice])
 
   function enterStill() {
     setStill(true)
@@ -152,7 +181,15 @@ export default function Home() {
         isLoading={isLoading}
         onInputChange={handleInputChange}
         onSubmit={onSubmit}
+        voiceSupported={voice.supported}
+        voiceEnabled={voice.enabled}
+        voiceState={voice.state}
+        onToggleVoice={voice.toggle}
       />
+
+      {voice.error && (
+        <p className="text-center text-[11px] text-rose-300/70 -mt-3 mb-3 px-5">{voice.error}</p>
+      )}
 
       {still && <StillSpace onReturn={() => setStill(false)} />}
       {mirrorOpen && (
