@@ -7,13 +7,16 @@ export const runtime = 'edge'
 // 前端按句切分后逐句调本路由，拿回 mp3 即播，形成「伪流式」听感且可随时打断。
 // 密钥只在服务端持有，绝不下发前端。
 const REGION = process.env.AZURE_SPEECH_REGION || 'westus3'
-const DEFAULT_VOICE = process.env.AZURE_SPEECH_VOICE || 'zh-CN-YunyeNeural'
-// 心镜气质：云野 + calm 风格 + 略慢语速 + 微降调，贴「沉静、留白、不催促」的旁观感。
-const DEFAULT_STYLE = 'calm'
-const DEFAULT_RATE = '-8%'
-const DEFAULT_PITCH = '-3%'
-// 兜底音色：DragonHD/带风格音色偶发不可用时退回最通用的稳定音色，宁可换声也不让朗读断掉。
+// 心镜气质：晓晓2 HD Flash（DragonHD 最新自然代际）+ empathetic（共情）风格，
+// 贴「接住人、温柔在场、不催促」。实测 westus3 该 Flash 音色可用（DragonHD 非 Flash 的晓辰在此区域 400）。
+const DEFAULT_VOICE = process.env.AZURE_SPEECH_VOICE || 'zh-CN-Xiaoxiao2:DragonHDFlashLatestNeural'
+const DEFAULT_STYLE = 'empathetic'
+// HD 音色不支持 <prosody> 调速/调调；沉静感改由风格本身 + 略低 temperature（更稳、更收）实现。
+const DEFAULT_TEMPERATURE = '0.8'
+// 兜底音色：HD 偶发不可用时退回标准 Xiaoxiao（标准音色支持 prosody，可慢放微降调），宁可换声也不让朗读断掉。
 const FALLBACK_VOICE = 'zh-CN-XiaoxiaoNeural'
+const FALLBACK_RATE = '-6%'
+const FALLBACK_PITCH = '-2%'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,13 +33,21 @@ function escapeXml(s: string): string {
     .replace(/'/g, '&apos;')
 }
 
-// 仅当音色支持 express-as 风格时才包 mstts；DragonHD 等无风格音色用裸 prosody，避免 SSML 报错。
-function buildSsml(text: string, voice: string, useStyle: boolean): string {
-  const inner = `<prosody rate="${DEFAULT_RATE}" pitch="${DEFAULT_PITCH}">${escapeXml(text)}</prosody>`
-  const body = useStyle
-    ? `<mstts:express-as style="${DEFAULT_STYLE}">${inner}</mstts:express-as>`
-    : inner
-  return `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-CN"><voice name="${voice}">${body}</voice></speak>`
+function isHdVoice(voice: string): boolean {
+  return /:DragonHD/i.test(voice)
+}
+
+// HD（DragonHD / Flash）音色：用 express-as 风格 + temperature 参数，不支持 prosody。
+// 标准音色：用 prosody 慢放微降调（标准音色不吃 temperature/部分风格，故走另一条路径）。
+function buildSsml(text: string, voice: string): string {
+  const safe = escapeXml(text)
+  const open = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-CN">`
+  if (isHdVoice(voice)) {
+    const body = `<mstts:express-as style="${DEFAULT_STYLE}">${safe}</mstts:express-as>`
+    return `${open}<voice name="${voice}" parameters="temperature=${DEFAULT_TEMPERATURE}">${body}</voice></speak>`
+  }
+  const body = `<prosody rate="${FALLBACK_RATE}" pitch="${FALLBACK_PITCH}">${safe}</prosody>`
+  return `${open}<voice name="${voice}">${body}</voice></speak>`
 }
 
 export function OPTIONS() {
@@ -84,11 +95,11 @@ export async function POST(req: NextRequest) {
       body: ssml,
     })
 
-  // 主音色（带 calm 风格）→ 失败回退到通用音色（无风格）。
-  let upstream = await synth(buildSsml(text, voice, true))
+  // 主音色（HD Flash + 共情风格）→ 失败回退到标准 Xiaoxiao（prosody 慢放）。
+  let upstream = await synth(buildSsml(text, voice))
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => '')
-    upstream = await synth(buildSsml(text, FALLBACK_VOICE, false))
+    upstream = await synth(buildSsml(text, FALLBACK_VOICE))
     if (!upstream.ok || !upstream.body) {
       const detail2 = await upstream.text().catch(() => '')
       return new Response(
